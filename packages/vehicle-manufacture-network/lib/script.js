@@ -20,7 +20,7 @@
  * @param {org.acme.vehicle_network.PlaceOrder} placeOrder - the PlaceOrder transaction
  * @transaction
  */
-async function placeOrder(orderRequest) { // eslint-disable-line no-unused-vars
+async function placeOrder2(orderRequest) { // eslint-disable-line no-unused-vars
     console.log('placeOrder');
 
     const factory = getFactory();
@@ -241,4 +241,31 @@ async function setupDemo() { // eslint-disable-line no-unused-vars
         }
     }
     await vehicleRegistry.addAll(vehicleResources);
+}
+
+const getNativeAPI = () => { };
+
+/**
+ *
+ */
+async function createOrder(orderRequest) { // eslint-disable-line no-unused-vars
+
+    // Get the Fabric stub API.
+    const APIstub = getNativeAPI();
+
+    // Look up details of the car from the fabcar chaincode.
+    const response = await APIstub.invokeChaincode('fabcar', ['queryCar', orderRequest.car.id]);
+
+    // Parse the car.
+    const json = new Buffer(response.payload.toArrayBuffer()).toString('utf8');
+    const car = JSON.parse(json);
+
+    // Create a new order asset.
+    const order = getFactory().newResource('org.manufacturing', 'Order', orderRequest.id);
+    order.car = car;
+
+    // Add the order asset to an asset registry.
+    const assetRegistry = await getAssetRegistry('org.manufacturing.Order');
+    await assetRegistry.add(order);
+
 }
